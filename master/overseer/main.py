@@ -133,12 +133,30 @@ elif [ -f "./target/release/overseer-node" ]; then
   BINARY="./target/release/overseer-node"
 elif [ -f "./overseer-node" ]; then
   BINARY="./overseer-node"
+elif [ -f "/usr/local/bin/overseer-node" ]; then
+  BINARY="/usr/local/bin/overseer-node"
 fi
 
 if [ -z "$BINARY" ]; then
-  echo "Node binary 'overseer-node' not found in PATH or local directory."
-  echo "Please place or build overseer-node first."
-  exit 1
+  echo "Node binary 'overseer-node' not found locally. Downloading latest release..."
+  RELEASE_URL="https://github.com/veylor-hq/overseer/releases/download/v1/overseer-node-linux-x86_64"
+  TARGET_PATH="/usr/local/bin/overseer-node"
+
+  if [ "$(id -u)" -eq 0 ]; then
+    curl -fsSL "$RELEASE_URL" -o "$TARGET_PATH"
+    chmod +x "$TARGET_PATH"
+    BINARY="$TARGET_PATH"
+  elif sudo -n true 2>/dev/null; then
+    sudo curl -fsSL "$RELEASE_URL" -o "$TARGET_PATH"
+    sudo chmod +x "$TARGET_PATH"
+    BINARY="$TARGET_PATH"
+  else
+    # Fallback to local working directory
+    curl -fsSL "$RELEASE_URL" -o "./overseer-node"
+    chmod +x "./overseer-node"
+    BINARY="./overseer-node"
+  fi
+  echo "Downloaded overseer-node to ${BINARY}"
 fi
 
 $BINARY --activate --url "${OVERSEER_URL}" --token "${ACTIVATION_TOKEN}" --cred-file "${CRED_FILE}"

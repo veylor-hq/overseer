@@ -143,31 +143,45 @@ async def dev_login_action(request: Request):
 async def establish_user_session(request: Request, user_sub: str, user_email: str, user_name: str):
     settings = get_settings()
 
-    # Ensure default workspace membership
-    default_ws = await Workspace.find_one(Workspace.slug == "veylor-primary")
-    if not default_ws:
-        default_ws = Workspace(
-            id=generate_id("ws"),
-            name="Veylor Primary Operations",
-            slug="veylor-primary",
-            description="Core infrastructure and mission-critical production services",
-        )
-        await default_ws.insert()
-
-    member = await WorkspaceMember.find_one(
-        WorkspaceMember.workspace_id == default_ws.id,
+    # Check if user already belongs to any workspace
+    existing_member = await WorkspaceMember.find_one(
         WorkspaceMember.user_sub == user_sub,
     )
-    if not member:
+    if not existing_member:
+        # Check if this is the very first system admin / owner, or create user personal workspace
+        any_workspaces = await Workspace.count()
+        if any_workspaces == 0:
+            # First user gets the primary workspace
+            user_ws = Workspace(
+                id=generate_id("ws"),
+                name="Veylor Primary Operations",
+                slug="veylor-primary",
+                description="Core infrastructure and mission-critical production services",
+            )
+        else:
+            # Clean display name for personal workspace
+            clean_name = (user_name or user_email.split("@")[0]).strip()
+            slug_seed = f"ws-{user_sub.lower().replace('_', '-')}"
+            user_ws = Workspace(
+                id=generate_id("ws"),
+                name=f"{clean_name}'s Operations",
+                slug=slug_seed,
+                description=f"Isolated workspace for {user_email}",
+            )
+        await user_ws.insert()
+
         member = WorkspaceMember(
             id=generate_id("wsm"),
-            workspace_id=default_ws.id,
+            workspace_id=user_ws.id,
             user_sub=user_sub,
             user_email=user_email,
             user_name=user_name,
             role="admin",
         )
         await member.insert()
+        active_ws_id = user_ws.id
+    else:
+        active_ws_id = existing_member.workspace_id
 
     session_data = {
         "sub": user_sub,
@@ -185,7 +199,7 @@ async def establish_user_session(request: Request, user_sub: str, user_email: st
         secure=settings.SESSION_COOKIE_SECURE,
         samesite="lax",
     )
-    response.set_cookie("overseer_active_ws", default_ws.id, max_age=settings.SESSION_TTL_SECONDS)
+    response.set_cookie("overseer_active_ws", active_ws_id, max_age=settings.SESSION_TTL_SECONDS)
     response.delete_cookie("overseer_oidc_state")
     return response
 

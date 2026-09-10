@@ -214,7 +214,12 @@
               {% if s.status == 'OPERATIONAL' %}
               <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
               {% elif s.status == 'OFFLINE' %}
-              <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+              <div class="flex items-center gap-1.5">
+                <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+                {% if s.last_error %}
+                <span class="text-[10px] text-red-400 font-mono" title="{{ s.last_error }}">{{ s.last_error }}</span>
+                {% endif %}
+              </div>
               {% else %}
               <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">UNKNOWN</span>
               {% endif %}

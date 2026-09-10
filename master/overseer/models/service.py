@@ -21,6 +21,8 @@ class MonitoredService(Document):
     status: str = Field(default="UNKNOWN", description="OPERATIONAL, DEGRADED, OFFLINE, UNKNOWN")
     last_checked_at: Optional[datetime] = Field(default=None)
     last_response_time_ms: Optional[float] = Field(default=None)
+    last_status_code: Optional[int] = Field(default=None)
+    last_error: Optional[str] = Field(default=None)
     uptime_percent: float = Field(default=100.0)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

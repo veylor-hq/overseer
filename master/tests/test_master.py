@@ -224,3 +224,26 @@ async def test_node_deletion_endpoint():
     # Confirm purged from DB
     deleted = await Node.find_one(Node.id == node.id)
     assert deleted is None
+
+
+@pytest.mark.asyncio
+async def test_new_user_isolated_workspace():
+    """Verify that multiple SSO users receive distinct isolated workspaces."""
+    from fastapi import Request
+    from overseer.web.auth_routes import establish_user_session
+
+    req = Request({"type": "http", "method": "GET", "url": "http://test/", "headers": []})
+
+    # User 1 establishes session
+    resp1 = await establish_user_session(req, "usr_alice", "alice@veylor.dev", "Alice")
+    # User 2 establishes session
+    resp2 = await establish_user_session(req, "usr_bob", "bob@veylor.dev", "Bob")
+
+    memberships_alice = await WorkspaceMember.find(WorkspaceMember.user_sub == "usr_alice").to_list()
+    memberships_bob = await WorkspaceMember.find(WorkspaceMember.user_sub == "usr_bob").to_list()
+
+    assert len(memberships_alice) == 1
+    assert len(memberships_bob) == 1
+    # Workspaces must be completely distinct
+    assert memberships_alice[0].workspace_id != memberships_bob[0].workspace_id
+

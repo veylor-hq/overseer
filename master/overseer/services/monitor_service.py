@@ -20,11 +20,17 @@ async def check_single_service(service: MonitoredService) -> None:
     error_str = None
     is_healthy = False
 
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; Veylor-Overseer/1.0; +https://overseer.veylor.dev)",
+        "Accept": "*/*",
+    }
+
     try:
         async with httpx.AsyncClient(
             timeout=float(service.timeout_seconds),
             follow_redirects=True,
             verify=False,
+            headers=headers,
         ) as client:
             res = await client.request(service.method, service.url)
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
@@ -32,7 +38,7 @@ async def check_single_service(service: MonitoredService) -> None:
             if status_code == service.expected_status:
                 is_healthy = True
             else:
-                error_str = f"Expected {service.expected_status}, received HTTP {status_code}"
+                error_str = f"HTTP {status_code} (Expected {service.expected_status})"
     except Exception as e:
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
         error_str = str(e)
@@ -66,6 +72,8 @@ async def check_single_service(service: MonitoredService) -> None:
     service.status = new_status
     service.last_checked_at = now
     service.last_response_time_ms = round(elapsed_ms, 2)
+    service.last_status_code = status_code
+    service.last_error = error_str
     service.updated_at = now
     await service.save()
 
