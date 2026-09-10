@@ -1,0 +1,351 @@
+<!-- HTMX Polling Fragment for Real-Time Status -->
+<div class="space-y-6 font-mono">
+  <!-- System Status Banner -->
+  <div class="border border-[#333333] bg-[#161616] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="text-xs uppercase text-[#71717a]">GLOBAL POSTURE:</span>
+      {% if system_posture == 'OPERATIONAL' %}
+      <span class="text-xs font-bold px-2 py-0.5 border border-emerald-500/40 text-emerald-400 bg-[#111111] flex items-center gap-1.5">
+        <span class="w-2 h-2 bg-emerald-400 animate-pulse"></span> ALL SYSTEMS OPERATIONAL
+      </span>
+      {% else %}
+      <span class="text-xs font-bold px-2 py-0.5 border border-red-500/40 text-red-400 bg-[#111111] flex items-center gap-1.5">
+        <span class="w-2 h-2 bg-red-400 animate-pulse"></span> DEGRADED // ATTENTION REQUIRED
+      </span>
+      {% endif %}
+    </div>
+    <div class="text-[11px] text-[#71717a]">
+      LAST REFRESH: <span class="text-[#fafafa]">{{ now.strftime('%H:%M:%S UTC') }}</span>
+    </div>
+  </div>
+
+  <!-- Section 1: Child Nodes (Servers) -->
+  <div class="space-y-2">
+    <div class="flex items-center justify-between border-b border-[#2a2a2a] pb-2">
+      <div class="text-xs font-bold text-[#fafafa] uppercase tracking-wider flex items-center gap-2">
+        <span>NODES & HOST SERVERS</span>
+        <span class="text-[10px] bg-[#222222] text-[#a1a1aa] px-1.5 py-0.5">{{ nodes|length }} ACTIVE</span>
+      </div>
+      <a href="/nodes" class="text-[11px] text-[#a1a1aa] hover:text-[#fafafa] hover:underline">+ REGISTER NODE</a>
+    </div>
+
+    <!-- Desktop View: Table -->
+    <div class="hidden md:block bg-[#161616] border border-[#333333] overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-[#2a2a2a] text-[#71717a] text-[10px] uppercase tracking-wider bg-[#111111]">
+            <th class="py-2.5 px-4">Node Name</th>
+            <th class="py-2.5 px-4">IP Address</th>
+            <th class="py-2.5 px-4">Status</th>
+            <th class="py-2.5 px-4">CPU / RAM / Disk</th>
+            <th class="py-2.5 px-4">Docker</th>
+            <th class="py-2.5 px-4">Last Received</th>
+            <th class="py-2.5 px-4 text-right">Details</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#222222]">
+          {% for n in nodes %}
+          <tr class="hover:bg-[#141414] transition">
+            <td class="py-3 px-4">
+              <div class="font-bold text-[#fafafa]">{{ n.name }}</div>
+              <div class="text-[10px] text-[#71717a] redactable">{{ n.hostname or 'Unassigned' }}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-[11px] text-zinc-300 redactable">{{ n.ip_address or '—' }}</span>
+            </td>
+            <td class="py-3 px-4">
+              {% if n.status == 'OPERATIONAL' %}
+              <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+              {% elif n.status == 'STALE' %}
+              <span class="status-badge-stale px-2 py-0.5 text-[10px] uppercase font-semibold">STALE</span>
+              {% elif n.status == 'OFFLINE' %}
+              <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+              {% else %}
+              <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">PENDING</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4">
+              {% if n.latest_metrics %}
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="text-zinc-300">CPU <span class="text-[#fafafa] font-bold">{{ n.latest_metrics.cpu_usage|round(1) }}%</span></span>
+                <span class="text-[#444444]">|</span>
+                <span class="text-zinc-300">RAM <span class="text-[#fafafa] font-bold">{% if n.latest_metrics.memory_total %}{{ ((n.latest_metrics.memory_used / n.latest_metrics.memory_total) * 100)|round(0) }}%{% else %}—{% endif %}</span></span>
+                <span class="text-[#444444]">|</span>
+                <span class="text-zinc-300">DISK <span class="text-[#fafafa] font-bold">{% if n.latest_metrics.disk_total %}{{ ((n.latest_metrics.disk_used / n.latest_metrics.disk_total) * 100)|round(0) }}%{% else %}—{% endif %}</span></span>
+              </div>
+              {% else %}
+              <span class="text-[11px] text-[#71717a]">Awaiting Telemetry</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4">
+              {% if n.latest_docker %}
+              <span class="text-[10px] bg-[#111111] border border-[#333333] px-2 py-0.5 text-zinc-300">
+                {{ n.latest_docker|length }} CONTAINERS
+              </span>
+              {% else %}
+              <span class="text-[10px] text-[#71717a]">None</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
+              {% if n.last_received_at %}
+              {{ n.last_received_at.strftime('%H:%M:%S UTC') }}
+              {% else %}
+              <span class="text-[#71717a]">Never</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <a href="/nodes/{{ n.id }}" class="text-[11px] text-[#fafafa] bg-[#222222] border border-[#444444] px-2.5 py-1 hover:bg-[#333333] transition">
+                INSPECT
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="py-8 text-center text-[#71717a]">
+              No nodes configured. Click "+ Register Node" to deploy a child agent.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile View: Responsive Stacked Cards -->
+    <div class="md:hidden space-y-3">
+      {% for n in nodes %}
+      <div class="bg-[#161616] border border-[#333333] p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-bold text-sm text-[#fafafa]">{{ n.name }}</div>
+            <div class="text-[11px] text-[#71717a] redactable">{{ n.hostname or 'Unassigned' }}</div>
+          </div>
+          <div>
+            {% if n.status == 'OPERATIONAL' %}
+            <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+            {% elif n.status == 'STALE' %}
+            <span class="status-badge-stale px-2 py-0.5 text-[10px] uppercase font-semibold">STALE</span>
+            {% elif n.status == 'OFFLINE' %}
+            <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+            {% else %}
+            <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">PENDING</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs border-y border-[#2a2a2a] py-2">
+          <div>
+            <span class="text-[10px] text-[#71717a] uppercase block">IP Address</span>
+            <span class="text-zinc-300 font-bold redactable">{{ n.ip_address or '—' }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-[#71717a] uppercase block">Docker</span>
+            <span class="text-zinc-300 font-bold">{{ n.latest_docker|length }} containers</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-[10px] text-[#71717a] uppercase block">Metrics</span>
+            {% if n.latest_metrics %}
+            <div class="flex items-center gap-2 text-[11px] mt-0.5">
+              <span class="text-zinc-300">CPU <b class="text-white">{{ n.latest_metrics.cpu_usage|round(1) }}%</b></span>
+              <span class="text-[#444444]">|</span>
+              <span class="text-zinc-300">RAM <b class="text-white">{% if n.latest_metrics.memory_total %}{{ ((n.latest_metrics.memory_used / n.latest_metrics.memory_total) * 100)|round(0) }}%{% else %}—{% endif %}</b></span>
+              <span class="text-[#444444]">|</span>
+              <span class="text-zinc-300">DISK <b class="text-white">{% if n.latest_metrics.disk_total %}{{ ((n.latest_metrics.disk_used / n.latest_metrics.disk_total) * 100)|round(0) }}%{% else %}—{% endif %}</b></span>
+            </div>
+            {% else %}
+            <span class="text-zinc-500">Awaiting Telemetry</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <div class="text-[10px] text-[#71717a]">
+            {% if n.last_received_at %}{{ n.last_received_at.strftime('%H:%M:%S UTC') }}{% else %}Never{% endif %}
+          </div>
+          <a href="/nodes/{{ n.id }}" class="btn-veylor-secondary px-3 py-1 text-xs">
+            INSPECT →
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <div class="p-6 text-center text-xs text-[#71717a] bg-[#161616] border border-[#333333]">
+        No nodes configured. Click "+ Register Node" to deploy.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Section 2: Monitored Services -->
+  <div class="space-y-2">
+    <div class="flex items-center justify-between border-b border-[#2a2a2a] pb-2">
+      <div class="text-xs font-bold text-[#fafafa] uppercase tracking-wider flex items-center gap-2">
+        <span>MONITORED SERVICES (HTTP/HEALTH)</span>
+        <span class="text-[10px] bg-[#222222] text-[#a1a1aa] px-1.5 py-0.5">{{ services|length }} TARGETS</span>
+      </div>
+      <a href="/services" class="text-[11px] text-[#a1a1aa] hover:text-[#fafafa] hover:underline">+ ADD SERVICE</a>
+    </div>
+
+    <!-- Desktop View: Table -->
+    <div class="hidden md:block bg-[#161616] border border-[#333333] overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-[#2a2a2a] text-[#71717a] text-[10px] uppercase tracking-wider bg-[#111111]">
+            <th class="py-2.5 px-4">Service</th>
+            <th class="py-2.5 px-4">Endpoint</th>
+            <th class="py-2.5 px-4">Status</th>
+            <th class="py-2.5 px-4">Uptime (Roll)</th>
+            <th class="py-2.5 px-4">Latency</th>
+            <th class="py-2.5 px-4">Last Checked</th>
+            <th class="py-2.5 px-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#222222]">
+          {% for s in services %}
+          <tr class="hover:bg-[#141414] transition">
+            <td class="py-3 px-4">
+              <div class="font-bold text-[#fafafa] flex items-center gap-1.5">
+                {% if s.starred %}<span class="text-amber-400 text-xs">★</span>{% endif %}
+                <span>{{ s.name }}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-[11px] text-zinc-300 redactable" title="{{ s.url }}">{{ s.url }}</span>
+            </td>
+            <td class="py-3 px-4">
+              {% if s.status == 'OPERATIONAL' %}
+              <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+              {% elif s.status == 'OFFLINE' %}
+              <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+              {% else %}
+              <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">UNKNOWN</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-xs font-bold {% if s.uptime_percent >= 99.0 %}text-emerald-400{% elif s.uptime_percent >= 95.0 %}text-amber-400{% else %}text-red-400{% endif %}">
+                {{ s.uptime_percent }}%
+              </span>
+            </td>
+            <td class="py-3 px-4 text-zinc-300 text-[11px]">
+              {% if s.last_response_time_ms is not none %}
+              {{ s.last_response_time_ms }} ms
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
+              {% if s.last_checked_at %}
+              {{ s.last_checked_at.strftime('%H:%M:%S UTC') }}
+              {% else %}
+              —
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <a
+                href="{{ s.url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-veylor-secondary px-3 py-1 text-[10px] hover:text-white"
+              >
+                OPEN ↗
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="py-8 text-center text-[#71717a]">
+              No services monitored. Click "+ Add Service" to add HTTP health check targets.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile View: Responsive Service Cards -->
+    <div class="md:hidden space-y-3">
+      {% for s in services %}
+      <div class="bg-[#161616] border border-[#333333] p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-sm text-[#fafafa] flex items-center gap-1.5">
+            {% if s.starred %}<span class="text-amber-400">★</span>{% endif %}
+            <span>{{ s.name }}</span>
+          </div>
+          <div>
+            {% if s.status == 'OPERATIONAL' %}
+            <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+            {% elif s.status == 'OFFLINE' %}
+            <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+            {% else %}
+            <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">UNKNOWN</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="text-xs text-zinc-300 truncate redactable font-mono bg-[#111111] p-2 border border-[#2a2a2a]">
+          {{ s.url }}
+        </div>
+
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-[#2a2a2a]">
+          <div class="flex items-center gap-3">
+            <div>
+              <span class="text-[9px] text-[#71717a] block">UPTIME</span>
+              <span class="font-bold {% if s.uptime_percent >= 99.0 %}text-emerald-400{% elif s.uptime_percent >= 95.0 %}text-amber-400{% else %}text-red-400{% endif %}">
+                {{ s.uptime_percent }}%
+              </span>
+            </div>
+            <div>
+              <span class="text-[9px] text-[#71717a] block">LATENCY</span>
+              <span class="text-zinc-300">{% if s.last_response_time_ms is not none %}{{ s.last_response_time_ms }}ms{% else %}—{% endif %}</span>
+            </div>
+          </div>
+
+          <a
+            href="{{ s.url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-veylor-primary px-3 py-1.5 text-xs"
+          >
+            OPEN ↗
+          </a>
+        </div>
+      </div>
+      {% else %}
+      <div class="p-6 text-center text-xs text-[#71717a] bg-[#161616] border border-[#333333]">
+        No services configured. Click "+ Add Service" above.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Section 3: Recent Events & Incidents -->
+  <div class="space-y-2">
+    <div class="flex items-center justify-between border-b border-[#2a2a2a] pb-2">
+      <div class="text-xs font-bold text-[#fafafa] uppercase tracking-wider">RECENT INFRASTRUCTURE EVENTS</div>
+      <a href="/events" class="text-[11px] text-[#a1a1aa] hover:text-[#fafafa] hover:underline">VIEW LOG ↗</a>
+    </div>
+
+    <div class="bg-[#161616] border border-[#333333] divide-y divide-[#222222]">
+      {% for evt in recent_events %}
+      <div class="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-[#141414] transition">
+        <div class="flex items-center gap-3">
+          {% if evt.severity == 'CRITICAL' %}
+          <span class="w-2 h-2 bg-red-500"></span>
+          {% elif evt.severity == 'WARNING' %}
+          <span class="w-2 h-2 bg-amber-500"></span>
+          {% else %}
+          <span class="w-2 h-2 bg-emerald-400"></span>
+          {% endif %}
+          <div>
+            <div class="text-xs font-bold text-[#fafafa]">{{ evt.title }}</div>
+            <div class="text-[11px] text-[#a1a1aa]">{{ evt.message }}</div>
+          </div>
+        </div>
+        <div class="text-[10px] text-[#71717a] font-mono">
+          {{ evt.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+        </div>
+      </div>
+      {% else %}
+      <div class="p-6 text-center text-xs text-[#71717a]">No incidents recorded. Infrastructure nominal.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<%
+  secrets_file = File.exist?(".kamal/secrets") ? File.read(".kamal/secrets") : ""
+  get_secret = ->(key) {
+    v = ENV[key] || (secrets_file[/^#{key}=(.*)/, 1] if secrets_file)
+    (v && !v.strip.empty?) ? v.strip : nil
+  }
+  server_ip = get_secret.call("TARGET_SERVER_IP")
+%>
+# config/deploy.yml
+service: veylor-overseer
+image: veylor-hq/overseer/veylor-overseer
+
+servers:
+  web:
+    - <%= server_ip %>
+
+registry:
+  server: ghcr.io
+  username: denver-code
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+ssh:
+  user: kamal
+
+builder:
+  arch: amd64
+
+proxy:
+  ssl: true
+  hosts:
+    - overseer.veylor.dev
+  app_port: 8080
+  healthcheck:
+    path: /health
+    interval: 5
+
+env:
+  clear:
+    TZ: Europe/London
+    OVERSEER_ENV: production
+    OVERSEER_BASE_URL: https://overseer.veylor.dev
+    OVERSEER_SSO_ISSUER: https://sso.veylor.dev
+    OVERSEER_SSO_CLIENT_ID: overseer
+    OVERSEER_SSO_REDIRECT_URI: https://overseer.veylor.dev/auth/callback
+    OVERSEER_SESSION_COOKIE_NAME: overseer_session
+    OVERSEER_SESSION_COOKIE_SECURE: true
+    OVERSEER_CORS_ORIGINS: http://localhost:8080,https://overseer.veylor.dev,https://sso.veylor.dev
+  secret:
+    - SECRET_KEY
+    - OVERSEER_MONGODB_URL
+    - OVERSEER_MONGODB_DATABASE

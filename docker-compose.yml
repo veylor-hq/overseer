@@ -1,0 +1,30 @@
+services:
+  overseer-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veylor-overseer-master
+    ports:
+      - "8080:8080"
+    environment:
+      - OVERSEER_ENV=production
+      - OVERSEER_BASE_URL=http://localhost:8080
+      - OVERSEER_MONGODB_URL=mongodb://overseer-mongodb:27017
+      - OVERSEER_MONGODB_DATABASE=veylor_overseer
+      - OVERSEER_SSO_ISSUER=http://localhost:8000
+      - OVERSEER_SECRET_KEY=veylor_overseer_production_master_secret_key_32chars
+    depends_on:
+      - overseer-mongodb
+    restart: unless-stopped
+
+  overseer-mongodb:
+    image: mongo:7.0
+    container_name: veylor-overseer-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - overseer_mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  overseer_mongo_data:

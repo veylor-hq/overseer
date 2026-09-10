@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ node.name }} // Node Inspection{% endblock %}
+
+{% block content %}
+<div class="space-y-6 font-mono">
+  <!-- Node Header -->
+  <div class="border border-[#333333] bg-[#161616] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-3">
+        <h1 class="text-base font-bold text-[#fafafa] uppercase tracking-wider">{{ node.name }}</h1>
+        {% if node.status == 'OPERATIONAL' %}
+        <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+        {% elif node.status == 'STALE' %}
+        <span class="status-badge-stale px-2 py-0.5 text-[10px] uppercase font-semibold">STALE</span>
+        {% elif node.status == 'OFFLINE' %}
+        <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+        {% else %}
+        <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">PENDING</span>
+        {% endif %}
+      </div>
+      <div class="text-xs text-[#71717a] mt-1 flex flex-wrap gap-4">
+        <span>HOST: <span class="text-zinc-300 redactable">{{ node.hostname or 'Unassigned' }}</span></span>
+        <span>IP: <span class="text-zinc-300 redactable">{{ node.ip_address or '—' }}</span></span>
+        <span>ID: <code class="text-zinc-400">{{ node.id }}</code></span>
+        <span>LAST RECEIVED: <span class="text-zinc-300">{% if node.last_received_at %}{{ node.last_received_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}{% else %}Never{% endif %}</span></span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      {% if node.activation_status != 'REVOKED' %}
+      <button onclick="revokeNode('{{ node.id }}')" class="btn-veylor-danger px-3 py-1.5 text-xs">
+        REVOKE ACCESS
+      </button>
+      {% endif %}
+      <button onclick="deleteNode('{{ node.id }}')" class="btn-veylor-danger bg-[#271313] px-3 py-1.5 text-xs">
+        DELETE NODE
+      </button>
+      <a href="/nodes" class="btn-veylor-secondary px-3 py-1.5 text-xs">← ALL NODES</a>
+    </div>
+  </div>
+
+  <!-- Telemetry Metrics Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-[#161616] border border-[#333333] p-4">
+      <div class="text-[10px] text-[#71717a] uppercase">CPU Load</div>
+      <div class="text-2xl font-bold text-[#fafafa] mt-1">
+        {% if node.latest_metrics %}{{ node.latest_metrics.cpu_usage|round(1) }}%{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="bg-[#161616] border border-[#333333] p-4">
+      <div class="text-[10px] text-[#71717a] uppercase">Memory In Use</div>
+      <div class="text-2xl font-bold text-[#fafafa] mt-1">
+        {% if node.latest_metrics and node.latest_metrics.memory_total %}
+        {{ ((node.latest_metrics.memory_used / node.latest_metrics.memory_total) * 100)|round(0) }}%
+        {% else %}—{% endif %}
+      </div>
+      <div class="text-[10px] text-[#71717a] mt-0.5">
+        {% if node.latest_metrics and node.latest_metrics.memory_total %}
+        {{ (node.latest_metrics.memory_used / 1073741824)|round(1) }}GB / {{ (node.latest_metrics.memory_total / 1073741824)|round(1) }}GB
+        {% endif %}
+      </div>
+    </div>
+    <div class="bg-[#161616] border border-[#333333] p-4">
+      <div class="text-[10px] text-[#71717a] uppercase">Disk Capacity</div>
+      <div class="text-2xl font-bold text-[#fafafa] mt-1">
+        {% if node.latest_metrics and node.latest_metrics.disk_total %}
+        {{ ((node.latest_metrics.disk_used / node.latest_metrics.disk_total) * 100)|round(0) }}%
+        {% else %}—{% endif %}
+      </div>
+      <div class="text-[10px] text-[#71717a] mt-0.5">
+        {% if node.latest_metrics and node.latest_metrics.disk_total %}
+        {{ (node.latest_metrics.disk_used / 1073741824)|round(1) }}GB / {{ (node.latest_metrics.disk_total / 1073741824)|round(1) }}GB
+        {% endif %}
+      </div>
+    </div>
+    <div class="bg-[#161616] border border-[#333333] p-4">
+      <div class="text-[10px] text-[#71717a] uppercase">System Uptime</div>
+      <div class="text-2xl font-bold text-[#fafafa] mt-1">
+        {% if node.latest_metrics and node.latest_metrics.uptime_seconds %}
+        {{ (node.latest_metrics.uptime_seconds / 86400)|round(1) }}d
+        {% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Docker Containers State -->
+  <div class="space-y-3">
+    <div class="border-b border-[#2a2a2a] pb-2 flex items-center justify-between">
+      <h3 class="text-xs font-bold text-[#fafafa] uppercase tracking-wider">Docker Containers (Local Inspection)</h3>
+      <span class="text-[10px] text-[#71717a]">{{ node.latest_docker|length }} ACTIVE SERVICES</span>
+    </div>
+    <div class="bg-[#161616] border border-[#333333] overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-[#2a2a2a] text-[#71717a] text-[10px] uppercase bg-[#111111]">
+            <th class="py-2.5 px-4">Container</th>
+            <th class="py-2.5 px-4">Image</th>
+            <th class="py-2.5 px-4">State</th>
+            <th class="py-2.5 px-4">Status / Health</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#222222]">
+          {% for c in node.latest_docker %}
+          <tr class="hover:bg-[#141414]">
+            <td class="py-2.5 px-4 font-bold text-[#fafafa] redactable">{{ c.name }}</td>
+            <td class="py-2.5 px-4 text-[#a1a1aa] text-[11px] font-mono">{{ c.image }}</td>
+            <td class="py-2.5 px-4">
+              {% if c.state == 'running' %}
+              <span class="text-emerald-400 text-[10px] font-semibold uppercase">RUNNING</span>
+              {% else %}
+              <span class="text-red-400 text-[10px] uppercase">{{ c.state }}</span>
+              {% endif %}
+            </td>
+            <td class="py-2.5 px-4 text-[#71717a] text-[11px]">{{ c.status }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="py-6 text-center text-[#71717a]">No Docker containers reported by child agent.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function revokeNode(nodeId) {
+  if (!confirm("Confirm revocation of credentials for this node? The agent will be permanently disconnected.")) return;
+  const res = await fetch(`/api/v1/nodes/${nodeId}/revoke`, { method: "POST" });
+  if (res.ok) window.location.reload();
+  else alert("Failed to revoke node credentials.");
+}
+
+async function deleteNode(nodeId) {
+  if (!confirm("Are you sure you want to completely DELETE this node and its historical telemetry? This action cannot be undone.")) return;
+  const res = await fetch(`/api/v1/nodes/${nodeId}`, { method: "DELETE" });
+  if (res.ok) {
+    window.location.href = "/nodes";
+  } else {
+    alert("Failed to delete node.");
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Veylor Overseer // Command Center{% endblock %}
+
+{% block content %}
+<!-- Live HTMX Auto-refreshing Dashboard Container -->
+<div
+  id="dashboardGrid"
+  hx-get="/partials/dashboard-grid"
+  hx-trigger="every 15s"
+  hx-swap="innerHTML"
+>
+  {% include "partials/dashboard_grid.html" %}
+</div>
+{% endblock %}

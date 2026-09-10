@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Monitored Services // Veylor Overseer{% endblock %}
+
+{% block content %}
+<div class="space-y-6 font-mono">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#333333] pb-4">
+    <div>
+      <h2 class="text-sm font-bold text-[#fafafa] uppercase tracking-wider">Monitored Services & Endpoints</h2>
+      <p class="text-xs text-[#71717a] mt-0.5">Automated Master-initiated HTTP synthetic health checks</p>
+    </div>
+    <button onclick="document.getElementById('createServiceModal').classList.remove('hidden')" class="btn-veylor-primary px-4 py-2 text-xs">
+      + Add Service
+    </button>
+  </div>
+
+  <!-- Desktop View: Table -->
+  <div class="hidden md:block bg-[#161616] border border-[#333333] overflow-x-auto">
+    <table class="w-full text-left text-xs">
+      <thead>
+        <tr class="border-b border-[#2a2a2a] text-[#71717a] text-[10px] uppercase tracking-wider bg-[#111111]">
+          <th class="py-3 px-4">Service</th>
+          <th class="py-3 px-4">Endpoint</th>
+          <th class="py-3 px-4">Status</th>
+          <th class="py-3 px-4">Uptime</th>
+          <th class="py-3 px-4">Latency</th>
+          <th class="py-3 px-4">Check Interval</th>
+          <th class="py-3 px-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#222222]">
+        {% for s in services %}
+        <tr class="hover:bg-[#141414] transition">
+          <td class="py-3 px-4">
+            <div class="font-bold text-[#fafafa] flex items-center gap-1.5">
+              {% if s.starred %}<span class="text-amber-400">★</span>{% endif %}
+              <span>{{ s.name }}</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="text-zinc-300 redactable" title="{{ s.url }}">{{ s.url }}</span>
+          </td>
+          <td class="py-3 px-4">
+            {% if s.status == 'OPERATIONAL' %}
+            <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+            {% elif s.status == 'OFFLINE' %}
+            <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+            {% else %}
+            <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">UNKNOWN</span>
+            {% endif %}
+          </td>
+          <td class="py-3 px-4">
+            <span class="text-xs font-bold {% if s.uptime_percent >= 99.0 %}text-emerald-400{% elif s.uptime_percent >= 95.0 %}text-amber-400{% else %}text-red-400{% endif %}">
+              {{ s.uptime_percent }}%
+            </span>
+          </td>
+          <td class="py-3 px-4 text-zinc-300 text-[11px]">
+            {% if s.last_response_time_ms is not none %}{{ s.last_response_time_ms }} ms{% else %}—{% endif %}
+          </td>
+          <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
+            every {{ s.interval_seconds }}s
+          </td>
+          <td class="py-3 px-4 text-right space-x-2">
+            <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" class="btn-veylor-secondary px-2.5 py-1 text-[10px] hover:text-white">
+              OPEN ↗
+            </a>
+            <button onclick="deleteService('{{ s.id }}')" class="btn-veylor-danger px-2.5 py-1 text-[10px]">
+              DELETE
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="py-8 text-center text-[#71717a]">No services configured. Click "+ Add Service" above.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile View: Cards -->
+  <div class="md:hidden space-y-3">
+    {% for s in services %}
+    <div class="bg-[#161616] border border-[#333333] p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="font-bold text-sm text-[#fafafa] flex items-center gap-1.5">
+          {% if s.starred %}<span class="text-amber-400">★</span>{% endif %}
+          <span>{{ s.name }}</span>
+        </div>
+        <div>
+          {% if s.status == 'OPERATIONAL' %}
+          <span class="status-badge-operational px-2 py-0.5 text-[10px] uppercase font-semibold">OPERATIONAL</span>
+          {% elif s.status == 'OFFLINE' %}
+          <span class="status-badge-offline px-2 py-0.5 text-[10px] uppercase font-semibold">OFFLINE</span>
+          {% else %}
+          <span class="status-badge-unknown px-2 py-0.5 text-[10px] uppercase">UNKNOWN</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="text-xs text-zinc-300 truncate redactable font-mono bg-[#111111] p-2 border border-[#2a2a2a]">
+        {{ s.url }}
+      </div>
+
+      <div class="flex items-center justify-between text-xs pt-1 border-t border-[#2a2a2a]">
+        <div class="flex items-center gap-3">
+          <div>
+            <span class="text-[9px] text-[#71717a] block">UPTIME</span>
+            <span class="font-bold {% if s.uptime_percent >= 99.0 %}text-emerald-400{% elif s.uptime_percent >= 95.0 %}text-amber-400{% else %}text-red-400{% endif %}">
+              {{ s.uptime_percent }}%
+            </span>
+          </div>
+          <div>
+            <span class="text-[9px] text-[#71717a] block">LATENCY</span>
+            <span class="text-zinc-300">{% if s.last_response_time_ms is not none %}{{ s.last_response_time_ms }}ms{% else %}—{% endif %}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a
+            href="{{ s.url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-veylor-secondary px-3 py-1 text-xs"
+          >
+            OPEN ↗
+          </a>
+          <button onclick="deleteService('{{ s.id }}')" class="btn-veylor-danger px-2.5 py-1 text-xs">
+            DELETE
+          </button>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="p-6 text-center text-xs text-[#71717a] bg-[#161616] border border-[#333333]">
+      No services configured. Click "+ Add Service" above.
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal: Add Service -->
+<div id="createServiceModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 font-mono">
+  <div class="bg-[#161616] border border-[#333333] w-full max-w-lg p-6 space-y-4">
+    <div class="flex items-center justify-between border-b border-[#2a2a2a] pb-3">
+      <h3 class="text-xs font-bold text-[#fafafa] uppercase tracking-wider">Monitor New Service Endpoint</h3>
+      <button onclick="document.getElementById('createServiceModal').classList.add('hidden')" class="text-[#a1a1aa] hover:text-white">&times;</button>
+    </div>
+    <form action="/services/create" method="POST" class="space-y-4 text-xs">
+      <div>
+        <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">Service Name</label>
+        <input type="text" name="name" required placeholder="e.g. eGarage API" class="w-full px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">Target Endpoint URL</label>
+        <input type="url" name="url" required placeholder="https://api.egarageapp.uk/health" class="w-full px-3 py-2" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">HTTP Method</label>
+          <select name="method" class="w-full px-3 py-2">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="HEAD">HEAD</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">Expected Status</label>
+          <input type="number" name="expected_status" value="200" class="w-full px-3 py-2" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">Interval (Seconds)</label>
+          <input type="number" name="interval_seconds" value="60" min="10" class="w-full px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-[#a1a1aa] uppercase text-[10px] mb-1">Timeout (Seconds)</label>
+          <input type="number" name="timeout_seconds" value="10" min="1" max="60" class="w-full px-3 py-2" />
+        </div>
+      </div>
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" name="starred" value="true" id="starInput" class="accent-white" />
+        <label for="starInput" class="text-[#fafafa] text-xs">Pin to top of situational dashboard</label>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('createServiceModal').classList.add('hidden')" class="btn-veylor-secondary px-3 py-2">CANCEL</button>
+        <button type="submit" class="btn-veylor-primary px-4 py-2">INITIALIZE HEALTH CHECK</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+async function deleteService(svcId) {
+  if (!confirm("Delete this monitored service?")) return;
+  const res = await fetch(`/api/v1/services/${svcId}`, { method: "DELETE" });
+  if (res.ok) window.location.reload();
+  else alert("Failed to delete service.");
+}
+</script>
+{% endblock %}

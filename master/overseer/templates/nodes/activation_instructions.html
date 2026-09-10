@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Node Activation Command // Veylor Overseer{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 font-mono">
+  <div class="border border-emerald-500/40 bg-[#161616] p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-emerald-400 text-[#111111] font-bold flex items-center justify-center">✓</div>
+      <div>
+        <h2 class="text-sm font-bold text-[#fafafa] uppercase tracking-wider">Node Created: {{ node.name }}</h2>
+        <p class="text-xs text-[#71717a]">One-time high-entropy activation token generated. Active for 60 minutes.</p>
+      </div>
+    </div>
+
+    <div class="space-y-2 pt-2">
+      <label class="block text-[10px] text-[#a1a1aa] uppercase">One-Time Activation Token (Single-Use Only)</label>
+      <div class="bg-[#111111] border border-[#333333] p-3 text-xs text-emerald-400 font-mono break-all select-all">
+        {{ activation_token }}
+      </div>
+      <p class="text-[10px] text-amber-400/90">
+        ⚠️ This token will be burned permanently upon successful node handshake. It will never be displayed again.
+      </p>
+    </div>
+
+    <div class="space-y-2 pt-2">
+      <label class="block text-[10px] text-[#a1a1aa] uppercase">Linux Host Installation Command</label>
+      <div class="bg-[#111111] border border-[#333333] p-3 text-xs text-[#fafafa] font-mono break-all select-all flex items-center justify-between">
+        <code>{{ install_command }}</code>
+      </div>
+    </div>
+
+    <div class="space-y-2 pt-2 text-[11px] text-[#a1a1aa]">
+      <p class="font-bold text-[#fafafa] uppercase">Manual Agent Execution:</p>
+      <div class="bg-[#111111] border border-[#2a2a2a] p-3 space-y-1">
+        <div><code>export OVERSEER_URL="{{ request.base_url }}"</code></div>
+        <div><code>export OVERSEER_ACTIVATION_TOKEN="{{ activation_token }}"</code></div>
+        <div><code>overseer-node --activate</code></div>
+      </div>
+    </div>
+
+    <div class="pt-4 border-t border-[#2a2a2a] flex justify-end gap-3">
+      <a href="/nodes" class="btn-veylor-primary px-4 py-2 text-xs">I HAVE DEPLOYED THE AGENT →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

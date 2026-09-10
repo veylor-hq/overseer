@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Event Log // Veylor Overseer{% endblock %}
+
+{% block content %}
+<div class="space-y-6 font-mono">
+  <div class="border-b border-[#333333] pb-4">
+    <h2 class="text-sm font-bold text-[#fafafa] uppercase tracking-wider">Infrastructure Event & Audit Log</h2>
+    <p class="text-xs text-[#71717a] mt-0.5">Chronological record of status transitions, failure incidents, and recovery notices</p>
+  </div>
+
+  <div class="bg-[#161616] border border-[#333333] divide-y divide-[#222222]">
+    {% for evt in events %}
+    <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#141414] transition">
+      <div class="flex items-start gap-3">
+        {% if evt.severity == 'CRITICAL' %}
+        <span class="w-2.5 h-2.5 bg-red-500 mt-1"></span>
+        {% elif evt.severity == 'WARNING' %}
+        <span class="w-2.5 h-2.5 bg-amber-500 mt-1"></span>
+        {% else %}
+        <span class="w-2.5 h-2.5 bg-emerald-400 mt-1"></span>
+        {% endif %}
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-[#fafafa]">{{ evt.title }}</span>
+            <span class="text-[9px] uppercase border border-[#333333] px-1.5 py-0.2 text-[#a1a1aa]">{{ evt.event_type }}</span>
+            <span class="text-[9px] text-[#71717a]">TARGET: <code class="text-zinc-400">{{ evt.source_id }}</code></span>
+          </div>
+          <div class="text-xs text-[#a1a1aa] mt-1">{{ evt.message }}</div>
+        </div>
+      </div>
+      <div class="text-[11px] text-[#71717a] whitespace-nowrap">
+        {{ evt.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+      </div>
+    </div>
+    {% else %}
+    <div class="p-8 text-center text-xs text-[#71717a]">No recorded infrastructure events.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

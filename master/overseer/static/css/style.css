@@ -1,0 +1,49 @@
+/* Overseer Defense Style Additions */
+.privacy-active .redactable {
+  background-color: #222222 !important;
+  color: transparent !important;
+  user-select: none !important;
+  position: relative !important;
+  display: inline-block !important;
+  min-width: 70px;
+}
+
+.privacy-active .redactable::after {
+  content: "[REDACTED]";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: #71717a !important;
+  font-family: "IBM Plex Mono", monospace !important;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge-operational {
+  background-color: #111111;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.status-badge-stale {
+  background-color: #111111;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.status-badge-offline {
+  background-color: #111111;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.status-badge-unknown {
+  background-color: #111111;
+  border: 1px solid #444444;
+  color: #a1a1aa;
+}

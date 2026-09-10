@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Veylor Overseer{% endblock %}</title>
+
+    <link rel="manifest" href="/static/manifest.json" />
+    <meta name="theme-color" content="#111111" />
+
+    <!-- IBM Plex Sans & IBM Plex Mono (Veylor Design System) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                '"IBM Plex Sans"',
+                "system-ui",
+                "-apple-system",
+                "sans-serif",
+              ],
+              mono: ['"IBM Plex Mono"', "monospace"],
+            },
+            colors: {
+              veylor: {
+                bg: "#111111",
+                card: "#161616",
+                cardAlt: "#1a1a1a",
+                border: "#333333",
+                borderLight: "#444444",
+                foreground: "#fafafa",
+                muted: "#a1a1aa",
+                subtle: "#71717a",
+                white: "#ffffff",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        border-radius: 0px !important; /* Strict defense-grade: no rounded corners */
+      }
+      body {
+        font-family:
+          "IBM Plex Sans",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background-color: #111111;
+        color: #fafafa;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #111111;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333333;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555555;
+      }
+      ::selection {
+        background: #fafafa;
+        color: #111111;
+      }
+
+      /* Buttons & inputs */
+      .btn-veylor-primary {
+        background-color: #fafafa;
+        color: #111111;
+        border: 1px solid #fafafa;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-veylor-primary:hover {
+        background-color: #e5e5e5;
+        border-color: #e5e5e5;
+      }
+      .btn-veylor-secondary {
+        background-color: transparent;
+        color: #fafafa;
+        border: 1px solid #333333;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-veylor-secondary:hover {
+        background-color: #1a1a1a;
+        border-color: #666666;
+      }
+      .btn-veylor-danger {
+        background-color: transparent;
+        color: #ef4444;
+        border: 1px solid #552222;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        transition: all 0.15s ease;
+      }
+      .btn-veylor-danger:hover {
+        background-color: #271313;
+        border-color: #991b1b;
+      }
+      input[type="text"],
+      input[type="url"],
+      input[type="number"],
+      select,
+      textarea {
+        background-color: #111111;
+        border: 1px solid #333333;
+        color: #fafafa;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8125rem;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #fafafa;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen flex flex-col justify-between bg-[#111111] text-[#fafafa]"
+  >
+    <!-- Top Defense-Style Header -->
+    <header
+      class="border-b border-[#333333] bg-[#111111] px-4 sm:px-6 py-3 sticky top-0 z-50"
+    >
+      <div
+        class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3"
+      >
+        <!-- Brand & Ecosystem Hub Links -->
+        <div class="flex items-center gap-4">
+          <a href="/" class="flex items-center gap-3">
+            <div
+              class="w-7 h-7 bg-[#fafafa] text-[#111111] font-mono font-black text-sm flex items-center justify-center"
+            >
+              O
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-xs font-bold tracking-widest font-mono text-[#fafafa] uppercase"
+                  >VEYLOR // OVERSEER</span
+                >
+              </div>
+            </div>
+          </a>
+
+          <!-- Ecosystem Service Hub Navigation -->
+          <div
+            class="hidden lg:flex items-center gap-1 border-l border-[#2a2a2a] pl-4 text-[11px] font-mono text-[#71717a]"
+          >
+            <span class="text-[10px] uppercase text-[#444444] mr-1">HUB:</span>
+            <a
+              href="http://localhost:8000"
+              target="_blank"
+              class="hover:text-[#fafafa] px-1.5 py-0.5 hover:bg-[#161616] transition"
+              >SSO</a
+            >
+            <span class="text-[#333333]">/</span>
+            <a
+              href="http://localhost:3000"
+              target="_blank"
+              class="hover:text-[#fafafa] px-1.5 py-0.5 hover:bg-[#161616] transition"
+              >eGarage</a
+            >
+            <span class="text-[#333333]">/</span>
+            <span
+              class="hover:text-[#fafafa] px-1.5 py-0.5 cursor-not-allowed opacity-50"
+              title="Planned Veylor Ecosystem Service"
+              >Relay</span
+            >
+            <span class="text-[#333333]">/</span>
+            <span
+              class="hover:text-[#fafafa] px-1.5 py-0.5 cursor-not-allowed opacity-50"
+              title="Planned Veylor Ecosystem Service"
+              >Pager</span
+            >
+            <span class="text-[#333333]">/</span>
+            <span
+              class="hover:text-[#fafafa] px-1.5 py-0.5 cursor-not-allowed opacity-50"
+              title="Planned Veylor Ecosystem Service"
+              >Warden</span
+            >
+          </div>
+        </div>
+
+        <!-- Right Side: Privacy Mode Toggle & Operator Session -->
+        <div class="flex items-center gap-3">
+          <!-- Privacy Mode Toggle (Requested for demo/showcase) -->
+          <button
+            id="privacyToggleBtn"
+            onclick="togglePrivacyMode()"
+            class="px-2.5 py-1 text-[11px] font-mono border border-[#444444] bg-[#161616] text-[#a1a1aa] hover:text-[#fafafa] transition flex items-center gap-1.5"
+            title="Obscure IP addresses and hostnames for demos and screen shares"
+          >
+            <span id="privacyIndicator" class="w-2 h-2 bg-[#71717a]"></span>
+            <span id="privacyBtnText">PRIVACY: OFF</span>
+          </button>
+
+          {% if user %}
+          <div
+            class="bg-[#161616] border border-[#2a2a2a] px-3 py-1 text-xs font-mono text-[#a1a1aa] flex items-center gap-2"
+          >
+            <span class="w-1.5 h-1.5 bg-emerald-400"></span>
+            <span class="redactable">{{ user.email }}</span>
+          </div>
+          <a
+            href="/auth/logout"
+            class="btn-veylor-danger px-2.5 py-1 text-[11px]"
+            >DISENGAGE</a
+          >
+          {% else %}
+          <a href="/auth/login" class="btn-veylor-primary px-3 py-1 text-[11px]"
+            >SSO LOGIN</a
+          >
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 space-y-6">
+      {% if user and workspace %}
+      <!-- Workspace & Navigation Bar -->
+      <div
+        class="border border-[#333333] bg-[#161616] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <div class="text-xs font-mono">
+            <div class="text-[10px] uppercase text-[#71717a]">
+              ACTIVE WORKSPACE
+            </div>
+            <div class="text-sm font-bold text-[#fafafa] tracking-wider">
+              {{ workspace.name }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap gap-1 text-xs font-mono">
+          <a
+            href="/"
+            class="px-3.5 py-2 uppercase tracking-wider border-b-2 transition {% if active_tab == 'dashboard' %}border-[#fafafa] text-[#fafafa] bg-[#111111]{% else %}border-transparent text-[#71717a] hover:text-[#fafafa]{% endif %}"
+          >
+            [01] SITUATIONAL DASHBOARD
+          </a>
+          <a
+            href="/nodes"
+            class="px-3.5 py-2 uppercase tracking-wider border-b-2 transition {% if active_tab == 'nodes' %}border-[#fafafa] text-[#fafafa] bg-[#111111]{% else %}border-transparent text-[#71717a] hover:text-[#fafafa]{% endif %}"
+          >
+            [02] NODES & SERVERS
+          </a>
+          <a
+            href="/services"
+            class="px-3.5 py-2 uppercase tracking-wider border-b-2 transition {% if active_tab == 'services' %}border-[#fafafa] text-[#fafafa] bg-[#111111]{% else %}border-transparent text-[#71717a] hover:text-[#fafafa]{% endif %}"
+          >
+            [03] SERVICES
+          </a>
+          <a
+            href="/alerts"
+            class="px-3.5 py-2 uppercase tracking-wider border-b-2 transition {% if active_tab == 'alerts' %}border-[#fafafa] text-[#fafafa] bg-[#111111]{% else %}border-transparent text-[#71717a] hover:text-[#fafafa]{% endif %}"
+          >
+            [04] ALERTS & TELEGRAM
+          </a>
+          <a
+            href="/events"
+            class="px-3.5 py-2 uppercase tracking-wider border-b-2 transition {% if active_tab == 'events' %}border-[#fafafa] text-[#fafafa] bg-[#111111]{% else %}border-transparent text-[#71717a] hover:text-[#fafafa]{% endif %}"
+          >
+            [05] EVENT LOG
+          </a>
+        </div>
+      </div>
+      {% endif %} {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="border-t border-[#333333] bg-[#111111] px-6 py-4 text-center font-mono text-xs text-[#71717a]"
+    >
+      <div
+        class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2"
+      >
+        <div>VEYLOR OVERSEER // DEFENSE-GRADE OBSERVABILITY // V0.1.0</div>
+        <div class="text-[10px]">READ-ONLY TELEMETRY ARCHITECTURE</div>
+      </div>
+    </footer>
+
+    <!-- Privacy Mode Script & PWA Register -->
+    <script>
+      function initPrivacyMode() {
+        const active = localStorage.getItem("overseer_privacy_mode") === "true";
+        applyPrivacyState(active);
+      }
+
+      function togglePrivacyMode() {
+        const current =
+          localStorage.getItem("overseer_privacy_mode") === "true";
+        const next = !current;
+        localStorage.setItem("overseer_privacy_mode", next.toString());
+        applyPrivacyState(next);
+      }
+
+      function applyPrivacyState(active) {
+        const btnText = document.getElementById("privacyBtnText");
+        const indicator = document.getElementById("privacyIndicator");
+        if (active) {
+          document.body.classList.add("privacy-active");
+          if (btnText) btnText.innerText = "PRIVACY: ON";
+          if (indicator) {
+            indicator.classList.remove("bg-[#71717a]");
+            indicator.classList.add("bg-emerald-400");
+          }
+        } else {
+          document.body.classList.remove("privacy-active");
+          if (btnText) btnText.innerText = "PRIVACY: OFF";
+          if (indicator) {
+            indicator.classList.remove("bg-emerald-400");
+            indicator.classList.add("bg-[#71717a]");
+          }
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", initPrivacyMode);
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/static/sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
