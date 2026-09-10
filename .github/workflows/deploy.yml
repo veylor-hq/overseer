@@ -97,11 +97,11 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/kamal_ci_key
           chmod 600 ~/.ssh/id_rsa ~/.ssh/kamal_ci_key
 
-          cat << 'SSHEOF' > ~/.ssh/config
+          cat << 'EOF' > ~/.ssh/config
           Host *
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
-SSHEOF
+          EOF
           chmod 600 ~/.ssh/config
 
           if [ ! -f .server.env ] && [ -n "$TARGET_SERVER_IP" ]; then
