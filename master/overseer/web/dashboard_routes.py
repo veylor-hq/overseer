@@ -1,3 +1,4 @@
+from pathlib import Path
 """Web UI Routes: Defense Dashboard, Nodes, Services, Alerts, Events, and HTMX fragments."""
 
 from datetime import datetime, timezone
@@ -18,7 +19,8 @@ from overseer.services.monitor_service import check_single_service
 from overseer.services.node_service import create_node_with_activation
 
 logger = logging.getLogger("overseer.web")
-templates = Jinja2Templates(directory="master/overseer/templates")
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 router = APIRouter(include_in_schema=False)
 
 

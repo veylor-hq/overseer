@@ -1,3 +1,4 @@
+from pathlib import Path
 """Veylor Overseer Master Application."""
 
 import asyncio
@@ -79,7 +80,8 @@ app.add_middleware(
 )
 
 # Static files
-app.mount("/static", StaticFiles(directory="master/overseer/static"), name="static")
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Shell installation script endpoint for convenient curl piping
 @app.get("/install.sh", response_class=PlainTextResponse)
