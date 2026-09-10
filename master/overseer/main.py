@@ -138,8 +138,23 @@ elif [ -f "/usr/local/bin/overseer-node" ]; then
 fi
 
 if [ -z "$BINARY" ]; then
-  echo "Node binary 'overseer-node' not found locally. Downloading latest release..."
-  RELEASE_URL="https://github.com/veylor-hq/overseer/releases/download/v1/overseer-node-linux-x86_64"
+  echo "Node binary 'overseer-node' not found locally. Detecting machine architecture..."
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64|amd64)
+      RELEASE_NAME="overseer-node-linux-x86_64"
+      ;;
+    aarch64|arm64)
+      RELEASE_NAME="overseer-node-linux-aarch64"
+      ;;
+    *)
+      echo "Unsupported architecture: $ARCH"
+      exit 1
+      ;;
+  esac
+
+  echo "Detected architecture: $ARCH (downloading ${RELEASE_NAME})..."
+  RELEASE_URL="https://github.com/veylor-hq/overseer/releases/download/v1/${RELEASE_NAME}"
   TARGET_PATH="/usr/local/bin/overseer-node"
 
   if [ "$(id -u)" -eq 0 ]; then

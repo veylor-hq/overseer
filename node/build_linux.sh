@@ -4,14 +4,46 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-echo "Building static Linux x86_64 binary using Docker..."
-docker build --platform linux/amd64 -f Dockerfile.build -t overseer-node-builder .
-
-echo "Extracting binary..."
-CONTAINER_ID=$(docker create overseer-node-builder /overseer-node)
 mkdir -p "$DIR/dist"
-docker cp "$CONTAINER_ID:/overseer-node" "$DIR/dist/overseer-node-linux-x86_64"
-docker rm -v "$CONTAINER_ID" >/dev/null
 
-chmod +x "$DIR/dist/overseer-node-linux-x86_64"
-echo "Done! Linux binary saved to: $DIR/dist/overseer-node-linux-x86_64"
+TARGET_ARCH="${1:-all}"
+
+build_arch() {
+  local arch="$1"
+  local platform=""
+  local output_name=""
+
+  if [ "$arch" = "x86_64" ] || [ "$arch" = "amd64" ]; then
+    platform="linux/amd64"
+    output_name="overseer-node-linux-x86_64"
+  elif [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
+    platform="linux/arm64"
+    output_name="overseer-node-linux-aarch64"
+  else
+    echo "Unsupported arch: $arch"
+    exit 1
+  fi
+
+  echo "=================================================="
+  echo "Building static Linux binary for ${platform}..."
+  echo "=================================================="
+
+  docker build --platform "$platform" -f Dockerfile.build -t "overseer-node-builder-${arch}" .
+
+  echo "Extracting binary to dist/${output_name}..."
+  CONTAINER_ID=$(docker create "overseer-node-builder-${arch}" /overseer-node)
+  docker cp "$CONTAINER_ID:/overseer-node" "$DIR/dist/${output_name}"
+  docker rm -v "$CONTAINER_ID" >/dev/null
+
+  chmod +x "$DIR/dist/${output_name}"
+  echo "Success: $DIR/dist/${output_name}"
+}
+
+if [ "$TARGET_ARCH" = "all" ]; then
+  build_arch "x86_64"
+  build_arch "aarch64"
+else
+  build_arch "$TARGET_ARCH"
+fi
+
+echo "All requested builds completed successfully in $DIR/dist/"

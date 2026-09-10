@@ -58,41 +58,42 @@ kamal deploy
 
 ## 2. Child Node Agent (`overseer-node` in Rust)
 
-The node agent compiles to a standalone static binary without dynamic C dependencies (`x86_64-unknown-linux-musl`).
+The node agent compiles to a standalone static binary without dynamic C dependencies (`musl` target), supporting both **x86_64** (AMD64) and **aarch64** (ARM64, such as Oracle Cloud Ampere A1, AWS Graviton, Raspberry Pi).
 
 ### A. Obtaining the Linux Binary
 
-#### Option 1: Download Pre-built Release (Recommended)
-You can directly download the static Linux musl binary:
+#### Option 1: Automatic Detection via Installer
+The `/install.sh` script automatically detects your server's architecture (`uname -m`) and downloads the correct binary (`x86_64` or `aarch64`):
+```bash
+curl -fsSL https://overseer.veylor.dev/install.sh | sh -s -- \
+  --token "<ACTIVATION_TOKEN>" \
+  --url "https://overseer.veylor.dev"
+```
+
+#### Option 2: Direct Download from GitHub Releases
+For **x86_64 / AMD64**:
 ```bash
 sudo curl -fsSL https://github.com/veylor-hq/overseer/releases/download/v1/overseer-node-linux-x86_64 -o /usr/local/bin/overseer-node
 sudo chmod +x /usr/local/bin/overseer-node
 ```
 
-*(Note: The `/install.sh` script will also automatically download this release binary if `overseer-node` is not already installed on the machine).*
+For **ARM64 / aarch64** (Oracle Cloud A1, Graviton, etc.):
+```bash
+sudo curl -fsSL https://github.com/veylor-hq/overseer/releases/download/v1/overseer-node-linux-aarch64 -o /usr/local/bin/overseer-node
+sudo chmod +x /usr/local/bin/overseer-node
+```
 
-#### Option 2: Build from Source Using Docker
+#### Option 3: Build from Source Using Docker
 On macOS / Linux using Docker:
 
 ```bash
 cd node
-./build_linux.sh
-```
+# Build both x86_64 and aarch64:
+./build_linux.sh all
 
-This compiles a stripped, static binary and saves it to:
-```text
-node/dist/overseer-node-linux-x86_64
-```
-
-Copy this binary to the target Linux host:
-```bash
-scp node/dist/overseer-node-linux-x86_64 user@your-server:/tmp/overseer-node
-```
-
-On the target server, move it into `PATH`:
-```bash
-sudo mv /tmp/overseer-node /usr/local/bin/overseer-node
-sudo chmod +x /usr/local/bin/overseer-node
+# Or build a specific target:
+./build_linux.sh aarch64
+./build_linux.sh x86_64
 ```
 
 ---
