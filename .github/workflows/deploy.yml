@@ -128,11 +128,23 @@ jobs:
 
           kamal deploy -c config/deploy.yml --version ${{ github.sha }} --skip-push
 
+      - name: Notify Success
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_MESSAGE_THREAD_ID: ${{ secrets.TELEGRAM_MESSAGE_THREAD_ID }}
+          TARGET_SERVER_IP: ${{ secrets.TARGET_SERVER_IP }}
+        run: |
+          ./scripts/notify_telegram.sh success "Veylor Overseer" "Deployment complete! Live traffic updated on https://overseer.veylor.dev."
+
       - name: Notify Failure
         if: failure()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_MESSAGE_THREAD_ID: ${{ secrets.TELEGRAM_MESSAGE_THREAD_ID }}
+          TARGET_SERVER_IP: ${{ secrets.TARGET_SERVER_IP }}
         run: |
           ./scripts/notify_telegram.sh failure "Veylor Overseer" "Build or deployment failed on GitHub Actions."
+
