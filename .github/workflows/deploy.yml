@@ -111,10 +111,14 @@ jobs:
           mkdir -p .kamal
           python3 -c 'import os
           print("KAMAL_REGISTRY_PASSWORD=" + os.environ.get("KAMAL_REGISTRY_PASSWORD", ""))
-          for sec in ["SECRET_KEY", "OVERSEER_MONGODB_URL", "OVERSEER_MONGODB_DATABASE"]:
-              val = os.environ.get(sec)
-              if val:
-                  print(f"{sec}={val}")
+          defaults = {
+              "SECRET_KEY": "4d5c26201e5ef7e86c915265546dd612f124bdead673df857279b1f3483b8865",
+              "OVERSEER_MONGODB_URL": "mongodb://velo-api-mongo:27017",
+              "OVERSEER_MONGODB_DATABASE": "veylor_overseer"
+          }
+          for sec, default_val in defaults.items():
+              val = os.environ.get(sec) or default_val
+              print(f"{sec}={val}")
           if os.path.exists(".server.env"):
               for line in open(".server.env"):
                   line = line.strip()

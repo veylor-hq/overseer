@@ -62,6 +62,12 @@ app = FastAPI(
     redoc_url=None,
 )
 
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Kamal healthcheck endpoint."""
+    return {"status": "ok", "service": "veylor-overseer"}
+
+
 # CORS
 cors_origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
 app.add_middleware(
