@@ -15,7 +15,7 @@
       {% endif %}
     </div>
     <div class="text-[11px] text-[#71717a]">
-      LAST REFRESH: <span class="text-[#fafafa]">{{ now.strftime('%H:%M:%S UTC') }}</span>
+      LAST REFRESH: <span class="text-[#fafafa]">{{ now.strftime('%H:%M:%S %Z') }}</span>
     </div>
   </div>
 
@@ -88,7 +88,7 @@
             </td>
             <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
               {% if n.last_received_at %}
-              {{ n.last_received_at.strftime('%H:%M:%S UTC') }}
+              {{ format_local_time(n.last_received_at, '%H:%M:%S %Z') }}
               {% else %}
               <span class="text-[#71717a]">Never</span>
               {% endif %}
@@ -159,7 +159,7 @@
 
         <div class="flex items-center justify-between pt-1">
           <div class="text-[10px] text-[#71717a]">
-            {% if n.last_received_at %}{{ n.last_received_at.strftime('%H:%M:%S UTC') }}{% else %}Never{% endif %}
+            {% if n.last_received_at %}{{ format_local_time(n.last_received_at, '%H:%M:%S %Z') }}{% else %}Never{% endif %}
           </div>
           <a href="/nodes/{{ n.id }}" class="btn-veylor-secondary px-3 py-1 text-xs">
             INSPECT →
@@ -238,7 +238,7 @@
             </td>
             <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
               {% if s.last_checked_at %}
-              {{ s.last_checked_at.strftime('%H:%M:%S UTC') }}
+              {{ format_local_time(s.last_checked_at, '%H:%M:%S %Z') }}
               {% else %}
               —
               {% endif %}

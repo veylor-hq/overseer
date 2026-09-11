@@ -2,7 +2,10 @@
 
 import logging
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import httpx
+
+LONDON_TZ = ZoneInfo("Europe/London")
 from overseer.models.alert import AlertDestination, AlertIncident
 from overseer.models.event import Event
 from overseer.security.credentials import decrypt_secret, generate_id
@@ -127,10 +130,14 @@ async def dispatch_telegram_alerts(event: Event, tag: str) -> None:
             f"🚨 <b>OVERSEER ALERT</b> {tag}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"<b>Type:</b> <code>{event.event_type}</code>\n"
+        event_time_local = event.created_at.replace(tzinfo=timezone.utc).astimezone(LONDON_TZ) if event.created_at.tzinfo is None else event.created_at.astimezone(LONDON_TZ)
+        text = (
+            f"🚨 <b>OVERSEER ALERT: {event.title}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
             f"<b>Severity:</b> {event.severity}\n"
             f"<b>Target:</b> <code>{event.source_id}</code>\n"
             f"<b>Details:</b> {event.message}\n"
-            f"<b>Timestamp:</b> <code>{event.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}</code>"
+            f"<b>Timestamp:</b> <code>{event_time_local.strftime('%Y-%m-%d %H:%M:%S %Z')}</code>"
         )
 
         telegram_url = f"https://api.telegram.org/bot{raw_token}/sendMessage"
@@ -159,12 +166,13 @@ async def send_test_telegram_alert(dest: AlertDestination) -> bool:
     if not raw_token:
         return False
 
+    now_local = datetime.now(LONDON_TZ)
     text = (
         f"🛡️ <b>OVERSEER // TELEGRAM TEST DISPATCH</b>\n"
         f"━━━━━━━━━━━━━━━━━━\n"
         f"<b>Status:</b> SECURE CHANNEL CONFIRMED\n"
         f"<b>Destination:</b> {dest.name}\n"
-        f"<b>Timestamp:</b> <code>{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</code>\n"
+        f"<b>Timestamp:</b> <code>{now_local.strftime('%Y-%m-%d %H:%M:%S %Z')}</code>\n"
         f"Veylor Overseer alert infrastructure is operational."
     )
     url = f"https://api.telegram.org/bot{raw_token}/sendMessage"

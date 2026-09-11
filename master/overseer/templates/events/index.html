@@ -30,7 +30,7 @@
         </div>
       </div>
       <div class="text-[11px] text-[#71717a] whitespace-nowrap">
-        {{ evt.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+        {{ format_local_time(evt.created_at) }}
       </div>
     </div>
     {% else %}

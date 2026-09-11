@@ -63,7 +63,7 @@
             {% endif %}
           </td>
           <td class="py-3 px-4 text-[#a1a1aa] text-[11px]">
-            {% if n.last_received_at %}{{ n.last_received_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}{% else %}Never{% endif %}
+            {% if n.last_received_at %}{{ format_local_time(n.last_received_at) }}{% else %}Never{% endif %}
           </td>
           <td class="py-3 px-4 text-right space-x-2">
             <a href="/nodes/{{ n.id }}" class="btn-veylor-secondary px-2.5 py-1 text-[11px]">INSPECT</a>

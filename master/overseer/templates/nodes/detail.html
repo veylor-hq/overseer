@@ -23,7 +23,7 @@
         <span>HOST: <span class="text-zinc-300 redactable">{{ node.hostname or 'Unassigned' }}</span></span>
         <span>IP: <span class="text-zinc-300 redactable">{{ node.ip_address or '—' }}</span></span>
         <span>ID: <code class="text-zinc-400">{{ node.id }}</code></span>
-        <span>LAST RECEIVED: <span class="text-zinc-300">{% if node.last_received_at %}{{ node.last_received_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}{% else %}Never{% endif %}</span></span>
+        <span>LAST RECEIVED: <span class="text-zinc-300">{% if node.last_received_at %}{{ format_local_time(node.last_received_at) }}{% else %}Never{% endif %}</span></span>
       </div>
     </div>
 

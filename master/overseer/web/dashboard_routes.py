@@ -18,9 +18,24 @@ from overseer.services.alert_service import send_test_telegram_alert
 from overseer.services.monitor_service import check_single_service
 from overseer.services.node_service import create_node_with_activation
 
+from zoneinfo import ZoneInfo
+
 logger = logging.getLogger("overseer.web")
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+LONDON_TZ = ZoneInfo("Europe/London")
+
+def format_local_time(dt, fmt="%Y-%m-%d %H:%M:%S %Z"):
+    if not dt:
+        return "Never"
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(LONDON_TZ).strftime(fmt)
+
+templates.env.filters["local_time"] = format_local_time
+templates.env.globals["format_local_time"] = format_local_time
+
 router = APIRouter(include_in_schema=False)
 
 
@@ -35,7 +50,8 @@ def get_base_context(request: Request, user: AuthUser, workspace: Workspace, act
         "env": settings.ENV,
         "app_name": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "now": datetime.now(timezone.utc),
+        "now": datetime.now(LONDON_TZ),
+        "format_local_time": format_local_time,
     }
 
 
