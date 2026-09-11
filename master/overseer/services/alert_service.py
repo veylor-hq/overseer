@@ -126,14 +126,11 @@ async def dispatch_telegram_alerts(event: Event, tag: str) -> None:
         if not raw_token:
             continue
 
-        text = (
-            f"🚨 <b>OVERSEER ALERT</b> {tag}\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"<b>Type:</b> <code>{event.event_type}</code>\n"
         event_time_local = event.created_at.replace(tzinfo=timezone.utc).astimezone(LONDON_TZ) if event.created_at.tzinfo is None else event.created_at.astimezone(LONDON_TZ)
         text = (
-            f"🚨 <b>OVERSEER ALERT: {event.title}</b>\n"
+            f"🚨 <b>OVERSEER ALERT: {event.title}</b> {tag}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
+            f"<b>Type:</b> <code>{event.event_type}</code>\n"
             f"<b>Severity:</b> {event.severity}\n"
             f"<b>Target:</b> <code>{event.source_id}</code>\n"
             f"<b>Details:</b> {event.message}\n"
