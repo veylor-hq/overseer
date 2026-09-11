@@ -29,6 +29,10 @@ ssh:
 builder:
   arch: amd64
 
+volumes:
+  - "/etc/localtime:/etc/localtime:ro"
+  - "/etc/timezone:/etc/timezone:ro"
+
 proxy:
   ssl: true
   hosts:
